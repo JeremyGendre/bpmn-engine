@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0hvabet" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.16.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.19.0">
+  <bpmn:process id="Process_16u9r7s" isExecutable="true" camunda:historyTimeToLive="180">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0lk32bp</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0lk32bp" sourceRef="StartEvent_1" targetRef="UserTask_ValiderBonDeTravail" />
+    <bpmn:userTask id="UserTask_ValiderBonDeTravail" name="Valider Bon de Travail">
+      <bpmn:incoming>Flow_0lk32bp</bpmn:incoming>
+      <bpmn:incoming>Flow_1lt5ye0</bpmn:incoming>
+      <bpmn:outgoing>Flow_0yyafrt</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0yyafrt" sourceRef="UserTask_ValiderBonDeTravail" targetRef="Gateway_1bet4jv" />
+    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresValidation" name="Résumer workflow parent après validation" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresValidation_1}">
+      <bpmn:incoming>Flow_04ro48y</bpmn:incoming>
+      <bpmn:outgoing>Flow_1at7rnl</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1at7rnl" sourceRef="ServiceTask_ResumerWorkflowParentApresValidation" targetRef="Gateway_09lowb5" />
+    <bpmn:exclusiveGateway id="Gateway_1bet4jv" name="action ?">
+      <bpmn:incoming>Flow_0yyafrt</bpmn:incoming>
+      <bpmn:outgoing>Flow_04ro48y</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0g4pk9x</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_04ro48y" name="Valider" sourceRef="Gateway_1bet4jv" targetRef="ServiceTask_ResumerWorkflowParentApresValidation">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">next(null, this.environment.output.UserTask_ValiderBonDeTravail.action === 'valider');</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="UserTask_DonnerRaisonRefusPourValidationInterne" name="Donner raison refus">
+      <bpmn:incoming>Flow_0g4pk9x</bpmn:incoming>
+      <bpmn:outgoing>Flow_1y59bje</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_0g4pk9x" name="Refuser" sourceRef="Gateway_1bet4jv" targetRef="UserTask_DonnerRaisonRefusPourValidationInterne">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">next(null, this.environment.output.UserTask_ValiderBonDeTravail.action === 'refuser');</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_09lowb5">
+      <bpmn:incoming>Flow_1at7rnl</bpmn:incoming>
+      <bpmn:incoming>Flow_00mpf0m</bpmn:incoming>
+      <bpmn:outgoing>Flow_1jl3t3h</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1jl3t3h" sourceRef="Gateway_09lowb5" targetRef="EndEvent_Cloture" />
+    <bpmn:sequenceFlow id="Flow_1y59bje" sourceRef="UserTask_DonnerRaisonRefusPourValidationInterne" targetRef="ServiceTask_ResumerWorkflowParentApresRefus" />
+    <bpmn:boundaryEvent id="SignalEvent_DonnerRaisonCloture" name="Retour" attachedToRef="UserTask_DonnerRaisonRefusPourValidationInterne">
+      <bpmn:outgoing>Flow_1lt5ye0</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_0r6gwpp" signalRef="Signal_Retour" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_1lt5ye0" sourceRef="SignalEvent_DonnerRaisonCloture" targetRef="UserTask_ValiderBonDeTravail" />
+    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresRefus" name="Résumer workflow parent après refus" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresRefus_1}">
+      <bpmn:incoming>Flow_1y59bje</bpmn:incoming>
+      <bpmn:outgoing>Flow_00mpf0m</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_00mpf0m" sourceRef="ServiceTask_ResumerWorkflowParentApresRefus" targetRef="Gateway_09lowb5" />
+    <bpmn:endEvent id="EndEvent_Cloture">
+      <bpmn:incoming>Flow_1jl3t3h</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDefinition_121itu8" />
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmn:signal id="Signal_Retour" name="Retour" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_16u9r7s">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0viet0u_di" bpmnElement="UserTask_ValiderBonDeTravail" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="270" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0g9627z_di" bpmnElement="ServiceTask_ResumerWorkflowParentApresValidation" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="570" y="77" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_1bet4jv_di" bpmnElement="Gateway_1bet4jv" isMarkerVisible="true">
+        <dc:Bounds x="445" y="92" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="450" y="73" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0ssx7vl_di" bpmnElement="UserTask_DonnerRaisonRefusPourValidationInterne" bioc:stroke="#0d4372" bioc:fill="#bbdefb" color:background-color="#bbdefb" color:border-color="#0d4372">
+        <dc:Bounds x="570" y="240" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_09lowb5_di" bpmnElement="Gateway_09lowb5" isMarkerVisible="true">
+        <dc:Bounds x="755" y="92" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1r60ikd" bpmnElement="ServiceTask_ResumerWorkflowParentApresRefus" bioc:stroke="#205022" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#205022">
+        <dc:Bounds x="730" y="240" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1kdv8qx_di" bpmnElement="EndEvent_Cloture">
+        <dc:Bounds x="862" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1ft7vjg_di" bpmnElement="SignalEvent_DonnerRaisonCloture">
+        <dc:Bounds x="582" y="302" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="613" y="333" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0lk32bp_di" bpmnElement="Flow_0lk32bp">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="270" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0yyafrt_di" bpmnElement="Flow_0yyafrt">
+        <di:waypoint x="370" y="117" />
+        <di:waypoint x="445" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1at7rnl_di" bpmnElement="Flow_1at7rnl">
+        <di:waypoint x="670" y="117" />
+        <di:waypoint x="755" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_04ro48y_di" bpmnElement="Flow_04ro48y">
+        <di:waypoint x="495" y="117" />
+        <di:waypoint x="570" y="117" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="516" y="99" width="34" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0g4pk9x_di" bpmnElement="Flow_0g4pk9x">
+        <di:waypoint x="470" y="142" />
+        <di:waypoint x="470" y="280" />
+        <di:waypoint x="570" y="280" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="480" y="183" width="39" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1jl3t3h_di" bpmnElement="Flow_1jl3t3h">
+        <di:waypoint x="805" y="117" />
+        <di:waypoint x="862" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1y59bje_di" bpmnElement="Flow_1y59bje">
+        <di:waypoint x="670" y="280" />
+        <di:waypoint x="730" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1lt5ye0_di" bpmnElement="Flow_1lt5ye0">
+        <di:waypoint x="600" y="338" />
+        <di:waypoint x="600" y="358" />
+        <di:waypoint x="320" y="358" />
+        <di:waypoint x="320" y="157" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00mpf0m_di" bpmnElement="Flow_00mpf0m">
+        <di:waypoint x="780" y="240" />
+        <di:waypoint x="780" y="142" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
