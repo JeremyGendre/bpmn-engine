@@ -8,6 +8,7 @@
     <bpmn:userTask id="UserTask_ValiderBonDeTravail" name="Valider Bon de Travail">
       <bpmn:incoming>Flow_0lk32bp</bpmn:incoming>
       <bpmn:incoming>Flow_1lt5ye0</bpmn:incoming>
+      <bpmn:incoming>Flow_12im7cj</bpmn:incoming>
       <bpmn:outgoing>Flow_0yyafrt</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0yyafrt" sourceRef="UserTask_ValiderBonDeTravail" targetRef="Gateway_1bet4jv" />
@@ -31,7 +32,7 @@
     <bpmn:sequenceFlow id="Flow_0g4pk9x" name="Refuser" sourceRef="Gateway_1bet4jv" targetRef="UserTask_DonnerRaisonRefusPourValidationInterne">
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">next(null, this.environment.output.UserTask_ValiderBonDeTravail.action === 'refuser');</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:exclusiveGateway id="Gateway_09lowb5">
+    <bpmn:exclusiveGateway id="Gateway_09lowb5" default="Flow_1jl3t3h">
       <bpmn:incoming>Flow_1at7rnl</bpmn:incoming>
       <bpmn:incoming>Flow_00mpf0m</bpmn:incoming>
       <bpmn:outgoing>Flow_1jl3t3h</bpmn:outgoing>
@@ -43,7 +44,7 @@
       <bpmn:signalEventDefinition id="SignalEventDefinition_0r6gwpp" signalRef="Signal_Retour" />
     </bpmn:boundaryEvent>
     <bpmn:sequenceFlow id="Flow_1lt5ye0" sourceRef="SignalEvent_DonnerRaisonCloture" targetRef="UserTask_ValiderBonDeTravail" />
-    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresRefus" name="Résumer workflow parent après refus" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresRefus_1}">
+    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresRefus" name="Résumer workflow parent après refus" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresRefus_1}" camunda:resultVariable="test">
       <bpmn:incoming>Flow_1y59bje</bpmn:incoming>
       <bpmn:outgoing>Flow_00mpf0m</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -52,8 +53,14 @@
       <bpmn:incoming>Flow_1jl3t3h</bpmn:incoming>
       <bpmn:terminateEventDefinition id="TerminateEventDefinition_121itu8" />
     </bpmn:endEvent>
+    <bpmn:boundaryEvent id="SignalEvent_Test" attachedToRef="ServiceTask_ResumerWorkflowParentApresRefus">
+      <bpmn:outgoing>Flow_12im7cj</bpmn:outgoing>
+      <bpmn:signalEventDefinition id="SignalEventDefinition_1nm8hzd" signalRef="Signal_1nkvbd8" />
+    </bpmn:boundaryEvent>
+    <bpmn:sequenceFlow id="Flow_12im7cj" sourceRef="SignalEvent_Test" targetRef="UserTask_ValiderBonDeTravail" />
   </bpmn:process>
   <bpmn:signal id="Signal_Retour" name="Retour" />
+  <bpmn:signal id="Signal_1nkvbd8" name="Signal_Test" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_16u9r7s">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
@@ -85,6 +92,9 @@
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1kdv8qx_di" bpmnElement="EndEvent_Cloture">
         <dc:Bounds x="862" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1t9j5gw_di" bpmnElement="SignalEvent_Test">
+        <dc:Bounds x="732" y="302" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="Event_1ft7vjg_di" bpmnElement="SignalEvent_DonnerRaisonCloture">
         <dc:Bounds x="582" y="302" width="36" height="36" />
@@ -136,6 +146,12 @@
       <bpmndi:BPMNEdge id="Flow_00mpf0m_di" bpmnElement="Flow_00mpf0m">
         <di:waypoint x="780" y="240" />
         <di:waypoint x="780" y="142" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12im7cj_di" bpmnElement="Flow_12im7cj">
+        <di:waypoint x="750" y="338" />
+        <di:waypoint x="750" y="358" />
+        <di:waypoint x="320" y="358" />
+        <di:waypoint x="320" y="157" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
