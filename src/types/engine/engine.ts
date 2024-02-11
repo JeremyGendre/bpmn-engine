@@ -23,4 +23,10 @@ export interface State {
   process: Process;
   logs: Array<Log>;
   lastActivity: string; // the id of the last activity
+  outputs: Outputs;
+}
+
+export interface Outputs {
+  variables: Record<string, any>;
+  tasks: Record<string, any>;
 }

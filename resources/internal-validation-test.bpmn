@@ -23,16 +23,16 @@
       <bpmn:outgoing>Flow_0g4pk9x</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_04ro48y" name="Valider" sourceRef="Gateway_1bet4jv" targetRef="ServiceTask_ResumerWorkflowParentApresValidation">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">next(null, this.environment.output.UserTask_ValiderBonDeTravail.action === 'valider');</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">this.state.outputs.tasks.UserTask_ValiderBonDeTravail.action === 'valider'</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:userTask id="UserTask_DonnerRaisonRefusPourValidationInterne" name="Donner raison refus">
       <bpmn:incoming>Flow_0g4pk9x</bpmn:incoming>
       <bpmn:outgoing>Flow_1y59bje</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0g4pk9x" name="Refuser" sourceRef="Gateway_1bet4jv" targetRef="UserTask_DonnerRaisonRefusPourValidationInterne">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">next(null, this.environment.output.UserTask_ValiderBonDeTravail.action === 'refuser');</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression" language="JavaScript">this.state.outputs.tasks.UserTask_ValiderBonDeTravail.action === 'refuser'</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:exclusiveGateway id="Gateway_09lowb5" default="Flow_1jl3t3h">
+    <bpmn:exclusiveGateway id="Gateway_09lowb5">
       <bpmn:incoming>Flow_1at7rnl</bpmn:incoming>
       <bpmn:incoming>Flow_00mpf0m</bpmn:incoming>
       <bpmn:outgoing>Flow_1jl3t3h</bpmn:outgoing>
