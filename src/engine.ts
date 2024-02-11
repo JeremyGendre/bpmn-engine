@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
 import { Process, TypedElements, ElementType, TypedSequenceFlow } from './types/bpmn/elements';
-import { EventType, Log, State } from './types/engine/engine';
+import { EventType, Log, Services, State } from './types/engine/engine';
 import BPMNError from './common/error';
 import { sanitizeEval } from './helper/eval';
 
@@ -15,10 +15,14 @@ const xmlParserOptions = {
 export default class Engine {
   private state: State;
   private typedElements: TypedElements;
+  private services: Services = {};
 
-  constructor(filePath?: string) {
-    if (filePath) {
-      this.useFile(filePath);
+  constructor(config?: { filePath?: string; services?: Services }) {
+    if (config.filePath) {
+      this.useFile(config.filePath);
+    }
+    if (config.services) {
+      this.services = config.services;
     }
   }
 
@@ -115,7 +119,7 @@ export default class Engine {
     return element;
   }
 
-  run() {
+  async run() {
     if (!this.isProcessExecutable()) {
       throw new BPMNError('Process is not executable');
     }
@@ -185,7 +189,16 @@ export default class Engine {
             }
             case ElementType.SERVICE_TASK: {
               if(lastLog.eventType === EventType.START_ACTIVITY) {
-                // todo execute function
+                const camundaExpression = lastElement.attributes['camunda:expression'];
+                if (camundaExpression) {
+                  const result = await this.services[camundaExpression]();
+                  const resultVariable = lastElement.attributes['camunda:resultVariable'];
+                  if (resultVariable) {
+                    this.state.outputs.variables[resultVariable] = result;
+                  } else {
+                    this.state.outputs.tasks[lastElement.attributes.id] = result;
+                  }
+                }
                 this.addLog(EventType.END_ACTIVITY, lastElement.attributes.id);
               } else {
                 const nextStep = this.getTypedElementOrThrow(lastElement['bpmn:outgoing']);
@@ -238,12 +251,13 @@ export default class Engine {
         }
       }
     } catch (error) {
+      this.addLog(EventType.ERROR, undefined, error.message);
       // if the error is a BPMNError, we can add it to the logs
-      if (error instanceof BPMNError) {
-        this.addLog(EventType.ERROR, undefined, error.message);
-       } else {
-         throw error; // else we let the others errors bubble up
-       }
+      // if (error instanceof BPMNError) {
+      //   this.addLog(EventType.ERROR, undefined, error.message);
+      // } else {
+      //   throw error; // else we let the others errors bubble up
+      // }
     }
     if(this.getLastLog()?.eventType !== EventType.END_PROCESS) {
       this.addLog(EventType.STOP);

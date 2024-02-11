@@ -12,7 +12,7 @@
       <bpmn:outgoing>Flow_0yyafrt</bpmn:outgoing>
     </bpmn:userTask>
     <bpmn:sequenceFlow id="Flow_0yyafrt" sourceRef="UserTask_ValiderBonDeTravail" targetRef="Gateway_1bet4jv" />
-    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresValidation" name="Résumer workflow parent après validation" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresValidation_1}">
+    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresValidation" name="Résumer workflow parent après validation" camunda:expression="travaux_resumerWorkflowParentApresValidation_1">
       <bpmn:incoming>Flow_04ro48y</bpmn:incoming>
       <bpmn:outgoing>Flow_1at7rnl</bpmn:outgoing>
     </bpmn:serviceTask>
@@ -44,7 +44,7 @@
       <bpmn:signalEventDefinition id="SignalEventDefinition_0r6gwpp" signalRef="Signal_Retour" />
     </bpmn:boundaryEvent>
     <bpmn:sequenceFlow id="Flow_1lt5ye0" sourceRef="SignalEvent_DonnerRaisonCloture" targetRef="UserTask_ValiderBonDeTravail" />
-    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresRefus" name="Résumer workflow parent après refus" camunda:expression="${environment.services.travaux_resumerWorkflowParentApresRefus_1}" camunda:resultVariable="test">
+    <bpmn:serviceTask id="ServiceTask_ResumerWorkflowParentApresRefus" name="Résumer workflow parent après refus" camunda:expression="travaux_resumerWorkflowParentApresRefus_1" camunda:resultVariable="test">
       <bpmn:incoming>Flow_1y59bje</bpmn:incoming>
       <bpmn:outgoing>Flow_00mpf0m</bpmn:outgoing>
     </bpmn:serviceTask>

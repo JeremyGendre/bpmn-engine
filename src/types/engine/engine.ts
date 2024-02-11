@@ -30,3 +30,7 @@ export interface Outputs {
   variables: Record<string, any>;
   tasks: Record<string, any>;
 }
+
+export interface Services {
+  [key: string]: () => any | (() => Promise<any>);
+}
