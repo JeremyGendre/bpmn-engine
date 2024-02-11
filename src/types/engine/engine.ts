@@ -1,5 +1,6 @@
 import { Process } from "../bpmn/elements";
 
+// the different types of events that can happen
 export enum EventType {
   START_PROCESS = 'start:process',
   END_PROCESS = 'end:process',
@@ -26,11 +27,13 @@ export interface State {
   outputs: Outputs;
 }
 
+// where the results of the tasks are stored
 export interface Outputs {
   variables: Record<string, any>;
   tasks: Record<string, any>;
 }
 
+// the services that can be called by the engine
 export interface Services {
   [key: string]: () => any | (() => Promise<any>);
 }

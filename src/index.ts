@@ -8,15 +8,23 @@ const engine = new Engine({
         financialCompetence: 1000,
         technicalCompetence: 2500,
       }
+    },
+    travaux_resumerWorkflowParentApresValidation_1: () => {
+      return {
+        financialCompetence: 900,
+        technicalCompetence: 1200,
+      }
     }
   }
 });
 
 async function start(){
-  // console.log(engine.getProcess());
   await engine.run();
   await engine.resumeWithId('UserTask_ValiderBonDeTravail', { 'action': 'refuser' });
-  console.log(await engine.resumeWithId('UserTask_DonnerRaisonRefusPourValidationInterne'));
+  const state = await engine.resumeWithId('SignalEvent_DonnerRaisonCloture') 
+  engine.setState(state);
+  const state2 = await engine.resumeWithId('UserTask_ValiderBonDeTravail', { 'action': 'valider' });
+  console.log(state2);
 }
 
 start()
