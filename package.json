@@ -1,5 +1,5 @@
 {
-  "name": "bpmn-engine",
+  "name": "@jeremygendre/bpmn-engine",
   "version": "1.0.0",
   "description": "bpmn engine to parse .bpmn files",
   "main": "dist/examples/index.js",
