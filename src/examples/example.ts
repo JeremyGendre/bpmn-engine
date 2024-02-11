@@ -1,4 +1,4 @@
-import Engine from "../engine";
+import Engine from "..";
 import { State } from "../types/engine/engine";
 
 const engine = new Engine({
