@@ -35,7 +35,7 @@ export default class Engine {
   }
 
   /* use a file to set the process or reset it */
-  useFile(filePath: string) {
+  useFile(filePath: string): Engine {
     const xmlDataStr = fs.readFileSync(filePath, 'utf8');
   
     const parser = new XMLParser(xmlParserOptions);
@@ -51,6 +51,7 @@ export default class Engine {
         tasks: {}
       }
     });
+    return this;
   }
 
   getProcess(): Process {
@@ -95,13 +96,14 @@ export default class Engine {
   }
 
   /* set the state of the process (for example, after a process has been started or after a process has been stopped and we need to resume from a state) */
-  setState(state: State) {
+  setState(state: State): Engine {
     if (!this.isProcessExecutable(state.process)) {
       throw new Error('Process is not executable');
     }
     this.state = state;
     // as the state changed, we need to update the typed elements
     this.setupTypedElements();
+    return this;
   }
 
   private getLastLog(): Log {
@@ -132,7 +134,7 @@ export default class Engine {
     return element;
   }
 
-  async run() {
+  async run(): Promise<State> {
     if (!this.isProcessExecutable()) {
       throw new BPMNError('Process is not executable');
     }
@@ -208,13 +210,16 @@ export default class Engine {
                 // if the service task has an expression, we need to evaluate it
                 const camundaExpression = lastElement.attributes['camunda:expression'];
                 if (camundaExpression) {
-                  const result = await this.services[camundaExpression]();
-                  const resultVariable = lastElement.attributes['camunda:resultVariable'];
-                  // store the result in the outputs if necessary
-                  if (resultVariable && result) {
-                    this.state.outputs.variables[resultVariable] = result;
-                  } else if (result) {
-                    this.state.outputs.tasks[lastElement.attributes.id] = result;
+                  const method = this.services[camundaExpression];
+                  if (method) {
+                    const result = await method(this.state);
+                    const resultVariable = lastElement.attributes['camunda:resultVariable'];
+                    // store the result in the outputs if necessary
+                    if (resultVariable && result) {
+                      this.state.outputs.variables[resultVariable] = result;
+                    } else if (result) {
+                      this.state.outputs.tasks[lastElement.attributes.id] = result;
+                    }
                   }
                 }
                 this.addLog(EventType.END_ACTIVITY, lastElement.attributes.id);
@@ -289,7 +294,7 @@ export default class Engine {
     return this.state;
   }
 
-  resumeWithId(id: string, result?: any) {
+  async resumeWithId(id: string, result?: any): Promise<State> {
     if (!this.state.process) {
       throw new BPMNError("Can't resume process : no process found");
     }
@@ -304,6 +309,8 @@ export default class Engine {
     // if the attached element is not the last activity, we throw an error
     if (resumingElement.type === ElementType.BOUNDARY_EVENT && resumingElement.attributes.attachedToRef !== this.state.lastActivity) {
       throw new BPMNError(`Can't resume process : attached ref element with id ${resumingElement.attributes.attachedToRef} does not correspond to the last process activity ${this.state.lastActivity}`);
+    } else if (resumingElement.attributes.id !== this.state.lastActivity) {
+      throw new BPMNError(`Can't resume process : resuming element ${id} does not correspond to the last process activity ${this.state.lastActivity}`);
     }
     this.addLog(EventType.RESUMING, id);
     if (result) {

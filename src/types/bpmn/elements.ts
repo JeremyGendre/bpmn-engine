@@ -14,7 +14,7 @@ export interface BoundaryEvent extends OutgoingFlow, WithAttributes<BoundaryEven
 
 export interface Process extends WithAttributes<ProcessAttributes> {
   'bpmn:startEvent'?: StartEvent;
-  'bpmn:endEvent'?: EndEvent;
+  'bpmn:endEvent'?: ArrayOrSingle<EndEvent>;
   'bpmn:sequenceFlow': ArrayOrSingle<SequenceFlow>;
   'bpmn:userTask'?: ArrayOrSingle<UserTask>;
   'bpmn:serviceTask'?: ArrayOrSingle<ServiceTask>;

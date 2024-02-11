@@ -35,5 +35,5 @@ export interface Outputs {
 
 // the services that can be called by the engine
 export interface Services {
-  [key: string]: () => any | (() => Promise<any>);
+  [key: string]: (state: State) => any | ((state: State) => Promise<any>);
 }

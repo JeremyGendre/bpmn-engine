@@ -2,9 +2,9 @@
   "name": "bpmn-engine",
   "version": "1.0.0",
   "description": "bpmn engine to parse .bpmn files",
-  "main": "dist/index.js",
+  "main": "dist/examples/index.js",
   "scripts": {
-    "start": "tsc && node dist/index.js",
+    "start": "tsc && node dist/examples/index.js",
     "lint": "eslint . --ext .ts",
     "test": "exit 1"
   },
