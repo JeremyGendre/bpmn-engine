@@ -5,12 +5,12 @@ Run a simple BPMN instance, made with camunda
 ## Installation
 
 - `npm install`    => install dep
-- `npm run start`  => start launch script in `src/index.ts`
+- `npm run start`  => start launch script in `src/examples/index.ts`
 
 ## Accepted elements
 
 | Element | multiple | required | description |
-|:-------:|:--------:|:--------:|-------------|
+|---------|:--------:|:--------:|-------------|
 | `bpmn:startEvent` | no | yes | A start event is the entry point of any BPMN schema. It is required to start the process. Only one start event is supported |
 | `bpmn:endEvent` | yes | yes | End events are the last step of a BPMN schema. Schemas must contain at least one end event to terminate properly. |
 | `bpmn:sequenceFlow` | yes | yes | Sequence flows are the linking elements they are required to link 2 elements. |
@@ -30,22 +30,22 @@ The `Engine` constructor has a `config` parameter to initialize the Engine insta
 Here are the available properties of the `config` object :
 
 | property | type | required | description |
-|:--------:|:----:|:--------:|-------------|
+|----------|:----:|:--------:|-------------|
 | `filePath` | `string` | no | Path to the `.bpmn` file to use when running the process |
-| `services` | `Record<string, () => any | (() => Promise<any>)>` | no | The different services that can be called in a service task |
+| `services` | `Record<string, (state: State) => any \| ((state: State) => Promise<any>)>` | no | The different services that can be called in a service task |
 
 Example :
 ```typescript
 const engine = new Engine({
   filePath: './resources/internal-validation-test.bpmn',
   services: {
-    method1: () => {
+    method1: (state: State) => {
       return {
         resultProperty1: 1000,
         resultProperty2: 'test',
       }
     },
-    method2: () => {
+    method2: (state: State) => {
       return 42
     }
   }
@@ -56,7 +56,7 @@ const engine = new Engine({
 - **`Engine` Public methods**
 
 | method | return value | args | description |
-|:------:|:------------:|:----:|-------------|
+|--------|:------------:|:----:|-------------|
 | `useFile` | `this` | `(filePath: string)` | Specify a file to use to run the process |
 | `getProcess` | `Process` | - | Get the current process used by the engine |
 | `isProcessExecutable` | `boolean` | `(process?: Process)` | Check if the process (given via argument or by default the actual used process) is executable |
