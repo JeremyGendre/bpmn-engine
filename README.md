@@ -6,7 +6,7 @@ Run a simple BPMN instance, made with camunda
 
 From package : 
 
-`npm install @jeremygendre/bpmn-engine@1.1.1`
+`npm install @jeremygendre/bpmn-engine`
 
 If you want to test it locally, after cloning the project :
 
