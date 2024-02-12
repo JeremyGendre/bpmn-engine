@@ -6,7 +6,7 @@
     "moduleResolution": "node",
     "sourceMap": true,
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist/lib"
   },
   "include": ["src/**/*"],
   "lib": ["es2015"]

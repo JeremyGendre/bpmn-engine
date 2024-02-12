@@ -4,8 +4,15 @@ Run a simple BPMN instance, made with camunda
 
 ## Installation
 
+From package : 
+
+`npm install @jeremygendre/bpmn-engine@1.1.1`
+
+If you want to test it locally, after cloning the project :
+
 - `npm install`    => install dep
 - `npm run start`  => start launch script in `src/examples/index.ts`
+
 
 ## Accepted elements
 
