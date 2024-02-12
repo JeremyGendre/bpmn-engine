@@ -6,7 +6,7 @@
   "module": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "start": "tsc && node dist/examples/example.js",
+    "start": "npm run build && node dist/examples/example.js",
     "lint": "eslint . --ext .ts",
     "test": "exit 1"
   },
