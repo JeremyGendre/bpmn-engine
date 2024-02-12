@@ -15,7 +15,7 @@ export enum EventType {
 
 export interface Log {
   eventType: EventType;
-  timestamp: number;
+  timestamp: string;
   id?: string;
   errorMessage?: string;
 }

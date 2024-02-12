@@ -113,7 +113,7 @@ export default class Engine {
   private addLog(eventType: EventType, id?: string, errorMessage?: string): Log {
     const log: Log = {
       eventType,
-      timestamp: Date.now()
+      timestamp: new Date().toISOString()
     };
     if (id) {
       log.id = id;
@@ -247,6 +247,7 @@ export default class Engine {
                   // if the condition is met, we take the flow
                   if (flow['bpmn:conditionExpression'] && condition) {
                     chosenFlow = flow as TypedSequenceFlow;
+                    break;
                   }
                 }
                 if(!chosenFlow) {
