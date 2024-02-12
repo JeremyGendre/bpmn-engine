@@ -10,8 +10,8 @@ export interface GatewayAttributes extends BaseAttributes {
 export interface ExclusiveGatewayAttributes extends GatewayAttributes {}
 
 export interface ServiceTaskAttributes extends BaseAttributes {
-  'camunda:expression'?: string; // the expression to evaluate
-  'camunda:resultVariable'?: string; // the name of the variable to store the result in
+  "camunda:expression"?: string; // the expression to evaluate
+  "camunda:resultVariable"?: string; // the name of the variable to store the result in
 }
 
 export interface UserTaskAttributes extends BaseAttributes {}
@@ -26,12 +26,8 @@ export interface BoundaryEventAttributes extends BaseAttributes {
 }
 
 export interface ProcessAttributes extends BaseAttributes {
-  isExecutable: 'true' | 'false'; // whether the process is executable
-  'camunda:historyTimeToLive'?: string;
+  isExecutable: "true" | "false"; // whether the process is executable
+  "camunda:historyTimeToLive"?: string;
 }
 
 export interface SignalAttributes extends BaseAttributes {}
-
-
-
-
