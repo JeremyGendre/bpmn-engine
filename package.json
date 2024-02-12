@@ -1,13 +1,17 @@
 {
   "name": "@jeremygendre/bpmn-engine",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "bpmn engine to parse .bpmn files",
   "main": "dist/index.js",
   "scripts": {
+    "build": "rm -rf dist && tsc",
     "start": "tsc && node dist/examples/example.js",
     "lint": "eslint . --ext .ts",
     "test": "exit 1"
   },
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/JeremyGendre/bpmn-engine.git"
