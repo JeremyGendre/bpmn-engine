@@ -2,15 +2,15 @@ import { Process } from "../bpmn/elements";
 
 // the different types of events that can happen
 export enum EventType {
-  START_PROCESS = 'start:process',
-  END_PROCESS = 'end:process',
-  START_ACTIVITY = 'start:activity',
-  END_ACTIVITY = 'end:activity',
-  TAKE_FLOW = 'take:flow',
-  RESUMING = 'resuming',
-  WAIT = 'wait',
-  STOP = 'stop',
-  ERROR = 'error'
+  START_PROCESS = "start:process",
+  END_PROCESS = "end:process",
+  START_ACTIVITY = "start:activity",
+  END_ACTIVITY = "end:activity",
+  TAKE_FLOW = "take:flow",
+  RESUMING = "resuming",
+  WAIT = "wait",
+  STOP = "stop",
+  ERROR = "error",
 }
 
 export interface Log {

@@ -1,23 +1,23 @@
 export type ArrayOrSingle<T> = Array<T> | T;
 
 export interface OutgoingFlows {
-  'bpmn:outgoing': ArrayOrSingle<string>;
+  "bpmn:outgoing": ArrayOrSingle<string>;
 }
 export interface IncomingFlows {
-  'bpmn:incoming': ArrayOrSingle<string>;
+  "bpmn:incoming": ArrayOrSingle<string>;
 }
 
 export interface OutgoingFlow {
-  'bpmn:outgoing'?: string;
+  "bpmn:outgoing"?: string;
 }
 export interface IncomingFlow {
-  'bpmn:incoming'?: string;
+  "bpmn:incoming"?: string;
 }
 
 export interface WithText {
-  '#text': string;
+  "#text": string;
 }
 
 export interface WithAttributes<T> {
   attributes: T;
-} 
+}
