@@ -22,7 +22,8 @@ export interface Log {
 
 export interface State {
   process: Process;
-  logs: Array<Log>;
+  lastLog?: Log;
+  error?: string;
   lastActivity: string; // the id of the last activity
   outputs: Outputs;
 }
@@ -33,7 +34,15 @@ export interface Outputs {
   tasks: Record<string, any>;
 }
 
+export type Service = (state: State) => any | ((state: State) => Promise<any>);
+
 // the services that can be called by the engine
 export interface Services {
-  [key: string]: (state: State) => any | ((state: State) => Promise<any>);
+  [key: string]: Service;
+}
+
+export interface EngineOptions {
+  filePath?: string;
+  services?: Services;
+  logCallback?: (log: Log) => void;
 }

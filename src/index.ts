@@ -1,7 +1,7 @@
 import { XMLParser } from 'fast-xml-parser';
 import * as fs from 'fs';
 import { Process, TypedElements, ElementType, TypedSequenceFlow } from './types/bpmn/elements';
-import { EventType, Log, Services, State } from './types/engine/engine';
+import { EngineOptions, EventType, Log, Service, Services, State } from './types/engine/engine';
 import BPMNError from './common/error';
 import { sanitizeEval } from './helper/eval';
 
@@ -24,14 +24,37 @@ export default class Engine {
   private typedElements: TypedElements;
   /* the services that can be used during the process */
   private services: Services = {};
+  /* the callback to call when a log is added */
+  private logCallback: (log: Log) => void;
 
-  constructor(config?: { filePath?: string; services?: Services }) {
+  constructor(config?: EngineOptions) {
     if (config.filePath) {
       this.useFile(config.filePath);
     }
     if (config.services) {
       this.services = config.services;
     }
+    if (config.logCallback) {
+      this.logCallback = config.logCallback;
+    }
+  }
+
+  /* add a service to the engine */
+  addService(name: string, method: Service): Engine {
+    this.services[name] = method;
+    return this;
+  }
+
+  /* remove a service from the engine */
+  removeService(name: string): Engine {
+    delete this.services[name];
+    return this;
+  }
+
+  /* add a callback to call when a log is added */
+  addLogCallback(callback: (log: Log) => void): Engine {
+    this.logCallback = callback;
+    return this;
   }
 
   /* use a file to set the process or reset it */
@@ -44,7 +67,6 @@ export default class Engine {
     const definitions = jsonObj['bpmn:definitions'];
     this.setState({
       process: definitions['bpmn:process'],
-      logs: [],
       lastActivity: '',
       outputs: {
         variables: {},
@@ -54,6 +76,7 @@ export default class Engine {
     return this;
   }
 
+  /* get the process */
   getProcess(): Process {
     return this.state.process;
   }
@@ -90,6 +113,7 @@ export default class Engine {
     this.typedElements = result;
   }
 
+  /* check if the process is executable */
   isProcessExecutable(process?: Process): boolean {
     const processToEvaluate = process ? process : this.state.process;
     return processToEvaluate?.attributes.isExecutable === 'true';
@@ -106,11 +130,13 @@ export default class Engine {
     return this;
   }
 
+  /* get the state of the process */
   private getLastLog(): Log {
-    return this.state.logs[this.state.logs.length - 1];
+    return this.state.lastLog;
   }
 
-  private addLog(eventType: EventType, id?: string, errorMessage?: string): Log {
+  /* add a log to the state of the process */
+  private setLastLog(eventType: EventType, id?: string, errorMessage?: string): Log {
     const log: Log = {
       eventType,
       timestamp: new Date().toISOString()
@@ -122,10 +148,17 @@ export default class Engine {
     if(errorMessage) {
       log.errorMessage = errorMessage;
     }
-    this.state.logs.push(log);
+    if(eventType === EventType.ERROR) {
+      this.state.error = errorMessage;
+    }
+    this.state.lastLog = log;
+    if (this.logCallback) {
+      this.logCallback(log);
+    }
     return log;
   }
 
+  /* get a typed element from its id, or throw an Error */
   private getTypedElementOrThrow(id: string) {
     const element = this.typedElements[id];
     if (!element) {
@@ -134,10 +167,12 @@ export default class Engine {
     return element;
   }
 
+  /* run the process */
   async run(): Promise<State> {
     if (!this.isProcessExecutable()) {
       throw new BPMNError('Process is not executable');
     }
+    delete this.state.error;
     console.log('Running engine');
     const processElements = this.typedElements;
     try {
@@ -145,13 +180,13 @@ export default class Engine {
         const lastLog = this.getLastLog();
         // if there is no current log, it means the process has not started yet, so we start it
         if (!lastLog) {
-          this.addLog(EventType.START_PROCESS);
+          this.setLastLog(EventType.START_PROCESS);
           if (!this.state.process['bpmn:startEvent']?.attributes?.id) {
             throw new BPMNError('No start event found');
           }
           // start the process with the first event that should be a startEvent
           const startEvent = this.state.process['bpmn:startEvent'];
-          this.addLog(EventType.START_ACTIVITY, startEvent.attributes.id);
+          this.setLastLog(EventType.START_ACTIVITY, startEvent.attributes.id);
         } else if (lastLog.eventType === EventType.RESUMING) {
           // if we are resuming, we need to find the previous step and resume from there
           const resumingElement = this.getTypedElementOrThrow(lastLog.id);
@@ -161,10 +196,10 @@ export default class Engine {
             if (!elementAttachedTo) {
               throw new BPMNError(`Can't resume process : attached ref element with id ${resumingElement.attributes.attachedToRef} not found for boundary event with id ${resumingElement.attributes.id}`);
             }
-            this.addLog(EventType.START_ACTIVITY, resumingElement.attributes.id);
+            this.setLastLog(EventType.START_ACTIVITY, resumingElement.attributes.id);
           } else {
             // else we just resume the element by ending it
-            this.addLog(EventType.END_ACTIVITY, resumingElement.attributes.id);
+            this.setLastLog(EventType.END_ACTIVITY, resumingElement.attributes.id);
           }
         } else {
           // get the last element with type property
@@ -174,34 +209,34 @@ export default class Engine {
             case ElementType.START_EVENT: {
               if (lastLog.eventType === EventType.END_ACTIVITY) {
                 const nextStep = this.getTypedElementOrThrow(lastElement['bpmn:outgoing']);
-                this.addLog(EventType.TAKE_FLOW, nextStep.attributes.id);
+                this.setLastLog(EventType.TAKE_FLOW, nextStep.attributes.id);
               } else {
-                this.addLog(EventType.END_ACTIVITY, lastElement.attributes.id);
+                this.setLastLog(EventType.END_ACTIVITY, lastElement.attributes.id);
               }
               break;
             }
             case ElementType.SEQUENCE_FLOW:{
               const nextStep = this.getTypedElementOrThrow(lastElement.attributes.targetRef);
-              this.addLog(EventType.START_ACTIVITY, nextStep.attributes.id);
+              this.setLastLog(EventType.START_ACTIVITY, nextStep.attributes.id);
               break;
             }
             case ElementType.BOUNDARY_EVENT: {
               const attachedElement = this.getTypedElementOrThrow(lastElement.attributes?.attachedToRef);
               // end the activity of the attached element
-              this.addLog(EventType.END_ACTIVITY, attachedElement.attributes.id);
+              this.setLastLog(EventType.END_ACTIVITY, attachedElement.attributes.id);
               // end itself
-              this.addLog(EventType.END_ACTIVITY, lastElement.attributes.id);
+              this.setLastLog(EventType.END_ACTIVITY, lastElement.attributes.id);
               // take the flow to the next step
               const nextStep = this.getTypedElementOrThrow(lastElement['bpmn:outgoing']);
-              this.addLog(EventType.TAKE_FLOW, nextStep.attributes.id);
+              this.setLastLog(EventType.TAKE_FLOW, nextStep.attributes.id);
               break;
             }
             case ElementType.USER_TASK: {
               if(lastLog.eventType === EventType.START_ACTIVITY) {
-                this.addLog(EventType.WAIT, lastElement.attributes.id);
+                this.setLastLog(EventType.WAIT, lastElement.attributes.id);
               } else {
                 const nextStep = this.getTypedElementOrThrow(lastElement['bpmn:outgoing']);
-                this.addLog(EventType.TAKE_FLOW, nextStep.attributes.id);
+                this.setLastLog(EventType.TAKE_FLOW, nextStep.attributes.id);
               }
               break;
             }
@@ -222,10 +257,10 @@ export default class Engine {
                     }
                   }
                 }
-                this.addLog(EventType.END_ACTIVITY, lastElement.attributes.id);
+                this.setLastLog(EventType.END_ACTIVITY, lastElement.attributes.id);
               } else {
                 const nextStep = this.getTypedElementOrThrow(lastElement['bpmn:outgoing']);
-                this.addLog(EventType.TAKE_FLOW, nextStep.attributes.id);
+                this.setLastLog(EventType.TAKE_FLOW, nextStep.attributes.id);
               }
               break;
             }
@@ -259,37 +294,37 @@ export default class Engine {
                 }
                 // if no flow found, throw an error, else take the flow
                 if (chosenFlow) {
-                  this.addLog(EventType.END_ACTIVITY, lastLog.id);
-                  this.addLog(EventType.TAKE_FLOW, chosenFlow.attributes.id);
+                  this.setLastLog(EventType.END_ACTIVITY, lastLog.id);
+                  this.setLastLog(EventType.TAKE_FLOW, chosenFlow.attributes.id);
                 } else {
                   throw new BPMNError(`No conditionnal flow taken and no default flow found for exclusive gateway ${lastLog.id}`);
                 }
               } else {
                 // if not an array, we can directly take the flow
                 const flow = this.getTypedElementOrThrow(outgoingFlows);
-                this.addLog(EventType.END_ACTIVITY, lastLog.id);
-                this.addLog(EventType.TAKE_FLOW, flow.attributes.id);
+                this.setLastLog(EventType.END_ACTIVITY, lastLog.id);
+                this.setLastLog(EventType.TAKE_FLOW, flow.attributes.id);
               }
               break;
             }
             case ElementType.END_EVENT: {
-              this.addLog(EventType.END_PROCESS, lastElement.attributes.id);
+              this.setLastLog(EventType.END_PROCESS, lastElement.attributes.id);
               break;
             }
           }
         }
       }
     } catch (error) {
-      this.addLog(EventType.ERROR, undefined, error.message);
+      this.setLastLog(EventType.ERROR, undefined, error.message);
       // if the error is a BPMNError, we can add it to the logs
       // if (error instanceof BPMNError) {
-      //   this.addLog(EventType.ERROR, undefined, error.message);
+      //   this.setLastLog(EventType.ERROR, undefined, error.message);
       // } else {
       //   throw error; // else we let the others errors bubble up
       // }
     }
     if(this.getLastLog()?.eventType !== EventType.END_PROCESS) {
-      this.addLog(EventType.STOP);
+      this.setLastLog(EventType.STOP);
     }
     console.log('Engine finished');
     return this.state;
@@ -298,6 +333,9 @@ export default class Engine {
   async resumeWithId(id: string, result?: any): Promise<State> {
     if (!this.state.process) {
       throw new BPMNError("Can't resume process : no process found");
+    }
+    if (this.state.error) {
+      throw new BPMNError(`Can't resume process : process is in error state : ${this.state.error}`);
     }
     const resumingElement = this.typedElements[id];
     if (!resumingElement) {
@@ -313,7 +351,7 @@ export default class Engine {
     } else if (resumingElement.attributes.id !== this.state.lastActivity) {
       throw new BPMNError(`Can't resume process : resuming element ${id} does not correspond to the last process activity ${this.state.lastActivity}`);
     }
-    this.addLog(EventType.RESUMING, id);
+    this.setLastLog(EventType.RESUMING, id);
     if (result) {
       this.state.outputs.tasks[id] = result;
     }

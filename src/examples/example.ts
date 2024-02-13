@@ -1,6 +1,8 @@
 import Engine from "..";
 import { State } from "../types/engine/engine";
 
+const logs = [];
+
 const engine = new Engine({
   filePath: './resources/internal-validation-test.bpmn',
   services: {
@@ -20,6 +22,10 @@ const engine = new Engine({
         technicalCompetence: 1200,
       }
     }
+  },
+  logCallback: (log) => {
+    // handle the history of the process if you want
+    logs.push(log);
   }
 });
 
@@ -28,6 +34,7 @@ async function start(){
   await engine.resumeWithId('UserTask_ValiderBonDeTravail', { 'action': 'refuser' });
   const state = await engine.resumeWithId('UserTask_DonnerRaisonRefusPourValidationInterne');
   console.log(state);
+  console.log(logs);
 }
 
 start();

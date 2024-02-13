@@ -40,6 +40,7 @@ Here are the available properties of the `config` object :
 |----------|:----:|:--------:|-------------|
 | `filePath` | `string` | no | Path to the `.bpmn` file to use when running the process |
 | `services` | `Record<string, (state: State) => any \| ((state: State) => Promise<any>)>` | no | The different services that can be called in a service task |
+| `logCallback` | `(log: Log) => void` | no | Optional callback to call when a log is added  |
 
 Example :
 ```typescript
@@ -55,6 +56,9 @@ const engine = new Engine({
     method2: (state: State) => {
       return 42
     }
+  },
+  logCallback: (log) => {
+    console.log(log)
   }
 });
 ```
@@ -64,6 +68,9 @@ const engine = new Engine({
 
 | method | return value | args | description |
 |--------|:------------:|:----:|-------------|
+| `addService` | `this` | `(name: string, method: Service)` | Add a service to the engine |
+| `removeService` | `this` | `(name: string)` | Remove a service from the engine |
+| `addLogCallback` | `this` | `(callback: (log: Log) => void)` | Add a callback to call when a log is added |
 | `useFile` | `this` | `(filePath: string)` | Specify a file to use to run the process |
 | `getProcess` | `Process` | - | Get the current process used by the engine |
 | `isProcessExecutable` | `boolean` | `(process?: Process)` | Check if the process (given via argument or by default the actual used process) is executable |
@@ -75,28 +82,31 @@ const engine = new Engine({
 ## Full Example
 
 ```typescript
-import Engine from "../engine";
-import { State } from "../types/engine/engine";
+import Engine from "@jeremygendre/bpmn-engine";
+
+const logs = [];
 
 const engine = new Engine({
-  filePath: './resources/internal-validation-test.bpmn',
+  filePath: './path/to/your-bpmn-file.bpmn',
   services: {
-    travaux_resumerWorkflowParentApresRefus_1: (state: State) => {
+    travaux_resumerWorkflowParentApresRefus_1: (state) => {
       // you can get the state of the process, and do actions based on that
-      console.log(state);
       return {
         financialCompetence: 1000,
         technicalCompetence: 2500,
       }
     },
-    travaux_resumerWorkflowParentApresValidation_1: (state: State) => {
+    travaux_resumerWorkflowParentApresValidation_1: (state) => {
       // you can get the state of the process, and do actions based on that
-      console.log(state);
       return {
         financialCompetence: 900,
         technicalCompetence: 1200,
       }
     }
+  },
+  logCallback: (log) => {
+    // handle the history of the process if you want
+    logs.push(log);
   }
 });
 
@@ -105,8 +115,10 @@ async function start(){
   await engine.resumeWithId('UserTask_ValiderBonDeTravail', { 'action': 'refuser' });
   const state = await engine.resumeWithId('UserTask_DonnerRaisonRefusPourValidationInterne');
   console.log(state);
+  console.log(logs);
 }
 
 start();
+
 ```
 
