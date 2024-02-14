@@ -28,13 +28,13 @@ export default class Engine {
   private logCallback: (log: Log) => void;
 
   constructor(config?: EngineOptions) {
-    if (config.filePath) {
+    if (config?.filePath) {
       this.useFile(config.filePath);
     }
-    if (config.services) {
+    if (config?.services) {
       this.services = config.services;
     }
-    if (config.logCallback) {
+    if (config?.logCallback) {
       this.logCallback = config.logCallback;
     }
   }
@@ -131,6 +131,11 @@ export default class Engine {
   }
 
   /* get the state of the process */
+  getState(): State {
+    return this.state;
+  }
+
+  /* get the state of the process */
   private getLastLog(): Log {
     return this.state.lastLog;
   }
@@ -148,9 +153,6 @@ export default class Engine {
     if(errorMessage) {
       log.errorMessage = errorMessage;
     }
-    if(eventType === EventType.ERROR) {
-      this.state.error = errorMessage;
-    }
     this.state.lastLog = log;
     if (this.logCallback) {
       this.logCallback(log);
@@ -167,16 +169,19 @@ export default class Engine {
     return element;
   }
 
+  /* check if the process is stopped */
+  isProcessStopped(): boolean {
+    return [EventType.END_PROCESS, EventType.ERROR, EventType.WAIT].includes(this.getLastLog()?.eventType);
+  }
+
   /* run the process */
   async run(): Promise<State> {
     if (!this.isProcessExecutable()) {
       throw new BPMNError('Process is not executable');
     }
-    delete this.state.error;
-    console.log('Running engine');
     const processElements = this.typedElements;
     try {
-      while(!([EventType.END_PROCESS, EventType.ERROR, EventType.WAIT, EventType.STOP].includes(this.getLastLog()?.eventType))) {
+      while(!this.isProcessStopped()) {
         const lastLog = this.getLastLog();
         // if there is no current log, it means the process has not started yet, so we start it
         if (!lastLog) {
@@ -323,10 +328,6 @@ export default class Engine {
       //   throw error; // else we let the others errors bubble up
       // }
     }
-    if(this.getLastLog()?.eventType !== EventType.END_PROCESS) {
-      this.setLastLog(EventType.STOP);
-    }
-    console.log('Engine finished');
     return this.state;
   }
 
@@ -334,20 +335,22 @@ export default class Engine {
     if (!this.state.process) {
       throw new BPMNError("Can't resume process : no process found");
     }
-    if (this.state.error) {
-      throw new BPMNError(`Can't resume process : process is in error state : ${this.state.error}`);
+    if (this.getLastLog().eventType === EventType.ERROR) {
+      throw new BPMNError(`Can't resume process : process is in error state : ${this.getLastLog().errorMessage}`);
     }
     const resumingElement = this.typedElements[id];
     if (!resumingElement) {
       throw new BPMNError(`Can't resume process : element with id ${id} not found`);
     }
-    if (this.getLastLog()?.eventType !== EventType.STOP) {
+    if (!this.isProcessStopped()) {
       throw new BPMNError("Can't resume process : process is not stopped");
     }
     // if the resuming element is a boundary event, we need to check the attached element.
     // if the attached element is not the last activity, we throw an error
-    if (resumingElement.type === ElementType.BOUNDARY_EVENT && resumingElement.attributes.attachedToRef !== this.state.lastActivity) {
-      throw new BPMNError(`Can't resume process : attached ref element with id ${resumingElement.attributes.attachedToRef} does not correspond to the last process activity ${this.state.lastActivity}`);
+    if (resumingElement.type === ElementType.BOUNDARY_EVENT) {
+      if (resumingElement.attributes.attachedToRef !== this.state.lastActivity) {
+        throw new BPMNError(`Can't resume process : attached ref element with id ${resumingElement.attributes.attachedToRef} does not correspond to the last process activity ${this.state.lastActivity}`);
+      }
     } else if (resumingElement.attributes.id !== this.state.lastActivity) {
       throw new BPMNError(`Can't resume process : resuming element ${id} does not correspond to the last process activity ${this.state.lastActivity}`);
     }

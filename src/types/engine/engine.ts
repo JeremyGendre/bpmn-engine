@@ -9,7 +9,6 @@ export enum EventType {
   TAKE_FLOW = 'take:flow',
   RESUMING = 'resuming',
   WAIT = 'wait',
-  STOP = 'stop',
   ERROR = 'error'
 }
 
@@ -23,7 +22,6 @@ export interface Log {
 export interface State {
   process: Process;
   lastLog?: Log;
-  error?: string;
   lastActivity: string; // the id of the last activity
   outputs: Outputs;
 }

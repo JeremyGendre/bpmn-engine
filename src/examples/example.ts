@@ -1,22 +1,19 @@
 import Engine from "..";
-import { State } from "../types/engine/engine";
 
 const logs = [];
 
 const engine = new Engine({
   filePath: './resources/internal-validation-test.bpmn',
   services: {
-    travaux_resumerWorkflowParentApresRefus_1: (state: State) => {
+    travaux_resumerWorkflowParentApresRefus_1: () => {
       // you can get the state of the process, and do actions based on that
-      console.log(state);
       return {
         financialCompetence: 1000,
         technicalCompetence: 2500,
       }
     },
-    travaux_resumerWorkflowParentApresValidation_1: (state: State) => {
+    travaux_resumerWorkflowParentApresValidation_1: () => {
       // you can get the state of the process, and do actions based on that
-      console.log(state);
       return {
         financialCompetence: 900,
         technicalCompetence: 1200,

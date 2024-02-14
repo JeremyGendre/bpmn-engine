@@ -75,6 +75,7 @@ const engine = new Engine({
 | `getProcess` | `Process` | - | Get the current process used by the engine |
 | `isProcessExecutable` | `boolean` | `(process?: Process)` | Check if the process (given via argument or by default the actual used process) is executable |
 | `setState` | `this` | `(state: State)` | Set the state that the engine have to use when running |
+| `getState` | `State` | - | Get the state of the engine |
 | `run` | `Promise<State>` | - | Run the engine |
 | `resumeWithId` | `Promise<State>` | `(id: string, result?: any)` | Resume the engine from the element with id `id`. You can also give an optionnal `result` that will be stored in the state's output |
 
