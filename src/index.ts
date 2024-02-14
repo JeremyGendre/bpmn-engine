@@ -280,8 +280,12 @@ export default class Engine {
                 let chosenFlow: TypedSequenceFlow | undefined;
                 for (let i = 0; i < outgoingFlows.length; i++) {
                   const flow = this.getTypedElementOrThrow(outgoingFlows[i]);
+                  const conditionText = flow['bpmn:conditionExpression']?.['#text'];
+                  if (!conditionText) {
+                    continue;
+                  }
                   // sanitize the condition before evaluating it
-                  const sanitizedCondition = sanitizeEval(flow['bpmn:conditionExpression']['#text']);
+                  const sanitizedCondition = sanitizeEval(conditionText);
                   // evaluate the condition
                   const condition = !!(new Function(`return ${sanitizedCondition}`).bind(this)());
                   // if the condition is met, we take the flow
@@ -320,6 +324,7 @@ export default class Engine {
         }
       }
     } catch (error) {
+      console.error(error);
       this.setLastLog(EventType.ERROR, undefined, error.message);
       // if the error is a BPMNError, we can add it to the logs
       // if (error instanceof BPMNError) {

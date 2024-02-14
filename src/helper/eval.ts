@@ -8,7 +8,7 @@ export function sanitizeEval(input: string): string {
   // Check for any potentially harmful keywords or functions
   const blacklistedKeywords = ['eval', 'require', 'import', 'Function', 'delete', 'push', 'function', '()', '=>'];
   blacklistedKeywords.forEach(keyword => {
-    if (input.includes(keyword)) {
+    if (typeof input === 'string' && input.includes(keyword)) {
       throw new Error(`Forbidden keyword or function "${keyword}" in condition string.`);
     }
   });

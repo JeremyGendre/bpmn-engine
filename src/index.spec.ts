@@ -1,10 +1,97 @@
 import Engine from ".";
 import { EngineOptions, EventType } from "./types/engine/engine";
 
-const bpmnFile = './resources/internal-validation-test.bpmn';
+describe('Test each elements', () => {
+  it('user task', async () => {
+    const engine = new Engine({
+      filePath: './resources/test-user-task.bpmn',
+    });
+    let state = await engine.run()
+    expect(state.lastActivity).toEqual('UserTask_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+    state = await engine.resumeWithId('UserTask_1', { 'action': 'valider' });
+    expect(state.lastActivity).toEqual('EndEvent_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {
+      UserTask_1: { 'action': 'valider' }
+    } });
+  });
+
+  it('service task', async () => {
+    const engine = new Engine({
+      filePath: './resources/test-service-task.bpmn',
+      services: {
+        testFunctionServiceTask1: () => {
+          return 'Hello';
+        },
+        testFunctionServiceTask2: () => {
+          return 42;
+        }
+      }
+    });
+    const state = await engine.run();
+    expect(state.lastActivity).toEqual('EndEvent_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {
+      testResultVariable: 42
+    }, tasks: {
+      ServiceTask_1: 'Hello'
+    } });
+  });
+
+  it('gateway', async () => {
+    const engine = new Engine({
+      filePath: './resources/test-gateway.bpmn',
+    });
+    const state = await engine.run();
+    console.log(state);
+    expect(state.lastActivity).toEqual('EndEvent_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+  });
+
+  it('gateway default flow', async () => {
+    const engine = new Engine({
+      filePath: './resources/test-gateway-default.bpmn',
+    });
+    const state = await engine.run();
+    expect(state.lastActivity).toEqual('EndEvent_2');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+  });
+
+  it('signal event', async () => {
+    const engine = new Engine({
+      filePath: './resources/test-signal-event.bpmn',
+    });
+    let state = await engine.run();
+    expect(state.lastActivity).toEqual('UserTask_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+    state = await engine.resumeWithId('UserTask_1');
+    expect(state.lastActivity).toEqual('UserTask_2');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+    state = await engine.resumeWithId('SignalEvent_1');
+    expect(state.lastActivity).toEqual('UserTask_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+    state = await engine.resumeWithId('UserTask_1');
+    expect(state.lastActivity).toEqual('UserTask_2');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+    state = await engine.resumeWithId('UserTask_2');
+    expect(state.lastActivity).toEqual('EndEvent_1');
+    expect(engine.isProcessStopped()).toBeTruthy();
+    expect(state.outputs).toEqual({ variables: {}, tasks: {} });
+  });
+});
+
+const sophisticatedBpmnFile = './resources/internal-validation-test.bpmn';
 
 const config: EngineOptions = {
-  filePath: bpmnFile,
+  filePath: sophisticatedBpmnFile,
   services: {
     travaux_resumerWorkflowParentApresRefus_1: () => {
       return {
@@ -24,11 +111,11 @@ const config: EngineOptions = {
   }
 };
 
-describe('engine', () => {
+describe('More sophisticated engine', () => {
   it('check process running depending on initialization', async () => {
     const engine = new Engine(config)
     const engine2 = new Engine();
-    engine2.useFile(bpmnFile);
+    engine2.useFile(sophisticatedBpmnFile);
     engine2.addLogCallback(config.logCallback);
     engine2.addService('travaux_resumerWorkflowParentApresRefus_1', config.services.travaux_resumerWorkflowParentApresRefus_1);
     engine2.addService('travaux_resumerWorkflowParentApresValidation_1', config.services.travaux_resumerWorkflowParentApresValidation_1);
